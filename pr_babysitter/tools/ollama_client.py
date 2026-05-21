@@ -1,23 +1,24 @@
 import httpx
 
 OLLAMA_URL = "http://ollama:11434/api/generate"
-MODEL = "phi3"
+MODEL = "llama3.2"
 
 def prompt_jarvis(diff_chunk: str, linter_error: str) -> str:
     """Aciona a inteligência do Phi-3 hospedado localmente via Docker para gerar a revisão do código."""
     print("[Jarvis] Analisando diff via LLM Local (Phi-3)...")
     
     prompt = f"""
-Você é o Jarvis, um Engenheiro de Software Sênior rígido e objetivo.
-O sistema de Quality Gate reprovou um Pull Request e encontrou o seguinte problema:
-"{linter_error}"
+Você é o Jarvis, um Engenheiro de Software Sênior extremamente direto, objetivo e sem enrolação.
+Sua missão é corrigir código. Não use introduções longas. Não invente nomes de ferramentas.
 
-Abaixo está o trecho de código afetado (Diff):
+Problema encontrado no código: "{linter_error}"
+
+Código afetado (Diff):
 {diff_chunk}
 
-Sua tarefa:
-1. Explique por que isso é um problema.
-2. Forneça o bloco de código exato e corrigido, pronto para o desenvolvedor copiar.
+Responda ESTRITAMENTE neste formato:
+1. Uma única frase explicando o problema.
+2. O código corrigido dentro de um bloco de código Markdown (```python).
 """
     
     payload = {
