@@ -57,18 +57,16 @@ ngrok http 8000
 ```
 Cadastre o link resultante (`https://seu-link.ngrok-free.app/webhook`) nas configurações do seu repositório no GitHub (*Settings > Webhooks*), assinando os eventos de `Pull request`.
 
-## Caso de Teste Explícito
-Siga estes passos exatos para presenciar o Agente reprovando um PR:
+## Caso de Teste Explícito (Prova de Fogo)
+O Agente foi programado para atuar no **Mundo Real**. Ele fará o download do Diff do seu PR, calculará matematicamente a regressão de cobertura e tamanho da base de código, e o Llama 3.2 atuará como um **Hacker Ético (Red Team)** para encontrar falhas de segurança reais.
 
-1. No seu repositório do GitHub (branch `master`), edite qualquer arquivo de código ou crie um arquivo simples (ex: `teste.py`).
-2. Digite a seguinte função propositalmente redundante:
-   ```python
-   def funcao_abandonada_para_o_jarvis():
-       print("Isso vai causar redução de cobertura!")
-   ```
-3. Crie uma nova branch para isso (`test-jarvis`) e efetue o *Commit*.
-4. Abra o **Pull Request** para a branch `master`.
-5. Vá para o painel principal do Pull Request. Em menos de 10 segundos, o PR Babysitter identificará o código através do Webhook e calculará o **Quality Gate**. O mock foi desenhado para travar, então ele postará um relatório estruturado avaliando:
-   - **Quality Metrics:** Test Coverage, Duplication e Violations (com cálculo de `Δ`).
-   - **Code Regressions:** Tamanho do arquivo inflado.
-   - **Codex Review:** O LLM (Llama 3.2) fará a auditoria final, berrando em vermelho (`> [!CAUTION] 🚨`) as falhas críticas e fornecendo a refatoração do código sugerida.
+Siga estes passos exatos para testar a fúria do Agente:
+
+1. Na raiz do repositório (na branch `master`), existe um arquivo chamado `evaluator_test_template.py`. Ele contém código malicioso disfarçado (uso de `eval`, `os.system` e senhas hardcoded), além de dezenas de linhas inúteis para inflar a métrica de duplicação.
+2. Crie uma nova branch na sua máquina (ex: `test-red-team`).
+3. Renomeie o arquivo `evaluator_test_template.py` para qualquer outro nome, como `critical_error.py` (ou crie um novo arquivo e cole o conteúdo lá dentro).
+4. Efetue o *Commit* e o *Push* para a nova branch.
+5. Abra o **Pull Request** para a branch `master` no GitHub.
+6. Vá para o painel principal do Pull Request. O Webhook disparará a API localmente.
+7. Em menos de 10 segundos, o Agente postará o **Quality Gate Report** estruturado com as tabelas de `Coverage`, `Duplication` e `Violations`. Você verá a cobertura despencar matematicamente devido às linhas injetadas.
+8. Abaixo do relatório, você lerá a **Auditoria de Segurança (Red Team)** gerada pelo Llama 3.2, onde ele atribuirá um `Security Grade`, descreverá o vetor de ataque das suas vulnerabilidades, e escreverá um *Exploit Payload* simulando como um Hacker atacaria aquele PR!
