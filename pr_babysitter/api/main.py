@@ -5,6 +5,7 @@ from tools.github_api import set_commit_status, submit_pr_review
 from tools.ollama_client import prompt_jarvis
 import uvicorn
 
+
 app = FastAPI(title="PR Babysitter API - Jarvis")
 
 # Função inútil para disparar o Linter e a IA
