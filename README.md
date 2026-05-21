@@ -50,6 +50,6 @@ O sistema foi arquitetado para *plug and play* em ambientes conteinerizados, eli
 ## Roteiro de Escalabilidade
 
 Para a adoção extensiva em ambiente de Produção, indica-se a aplicação das seguintes adequações:
-1. **Integração SAST/DAST Real:** Substituição da heurística simulada por integrações diretas a parsers ou endpoints de ferramentas enterprise de análise estática (ex: SonarQube, Fortify, Checkmarx).
+1. **Integração SAST/DAST Real (Fim dos Mocks):** Para tornar a avaliação do Agente 100% utilitária no mundo real, é necessário substituir os valores numéricos fixos de demonstração (Mock) presentes no arquivo `api/main.py` por integrações dinâmicas a parsers ou webhooks de ferramentas enterprise de análise estática (ex: SonarQube, Checkmarx, Fortify). A matemática do Quality Gate já está pronta e provada, basta "ligar os canos" para plugar as métricas reais.
 2. **Armazenamento Descentralizado:** Transição do SQLite de volume local para clusters PostgreSQL ou MySQL gerenciados (ex: AWS RDS), habilitando concorrência multi-repositório no mesmo Agente.
 3. **Assinatura Criptográfica:** Implementação do mecanismo `X-Hub-Signature-256` no FastAPI, blindando a rota de recepção pública de payloads de origem não certificada.
