@@ -36,10 +36,22 @@ def dashboard():
 async def process_pr(payload: dict):
     """Navegador Central do Jarvis. Recebe o Payload e orquestra as Ferramentas."""
     action = payload.get("action")
+    pr_data = payload.get("pull_request", {})
+    
+    # --- FLUXO DE ATUALIZAÇÃO DE BASELINE ---
+    # Quando o PR é fechado E aprovado (merged) na master:
+    if action == "closed" and pr_data.get("merged") is True:
+        print(f"[Jarvis] PR #{pr_data.get('number')} Mergeado! Atualizando o Banco de Dados da Baseline...")
+        from tools.baseline_db import update_baseline
+        # Em produção, aqui nós leríamos os dados finais da branch master.
+        # No nosso mock, vamos fixar os valores para popular o SQLite:
+        update_baseline(coverage=82.0, vulns=0, complexity=70.0)
+        return
+        
+    # --- FLUXO DE VALIDAÇÃO DE PR ---
     if action not in ["opened", "synchronize"]:
         return
         
-    pr_data = payload.get("pull_request", {})
     repo_full_name = payload.get("repository", {}).get("full_name")
     pull_number = pr_data.get("number")
     head_sha = pr_data.get("head", {}).get("sha")
@@ -50,9 +62,8 @@ async def process_pr(payload: dict):
     set_commit_status(repo_full_name, head_sha, "pending", "Jarvis está validando as métricas...")
     
     # 2. Mock de Métricas do Código (Demonstração da Catraca Travando)
-    # Na arquitetura completa, isso chamaria o tools.linter após extrair o diff.
     pr_coverage = 82.0 
-    pr_vulns = 0
+    pr_vulns = 1  # Forçando falha absoluta de segurança para teste
     pr_complexity_score = 70.0
     pr_best_practices = 80.0
     pr_errors_score = 90.0
@@ -62,10 +73,10 @@ async def process_pr(payload: dict):
     
     if gate_result["pass"]:
         set_commit_status(repo_full_name, head_sha, "success", gate_result["reason"])
-        submit_pr_review(repo_full_name, pull_number, "APPROVE", f"🤖 **Jarvis (Aprovado):** {gate_result['reason']}")
+        submit_pr_review(repo_full_name, pull_number, "COMMENT", gate_result["report"])
     else:
         set_commit_status(repo_full_name, head_sha, "failure", gate_result["reason"])
-        submit_pr_review(repo_full_name, pull_number, "REQUEST_CHANGES", f"🤖 **Jarvis (Bloqueado):** {gate_result['reason']}")
+        submit_pr_review(repo_full_name, pull_number, "COMMENT", gate_result["report"])
         
         # 4. Aciona a Skill de Babysit via LLM Local
         jarvis_reply = prompt_jarvis(

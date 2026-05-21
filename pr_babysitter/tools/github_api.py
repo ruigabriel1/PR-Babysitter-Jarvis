@@ -2,8 +2,8 @@ import os
 import httpx
 from dotenv import load_dotenv
 
-# Força o carregamento do arquivo .env quando rodando via Uvicorn local
-load_dotenv()
+# Carrega o .env manualmente (necessário pois estamos rodando fora do Docker)
+load_dotenv(os.path.join(os.path.dirname(__file__), '..', '.env'))
 
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 HEADERS = {
