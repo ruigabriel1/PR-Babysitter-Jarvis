@@ -32,7 +32,7 @@ A solução foi arquitetada em 3 camadas de orquestração:
 - **Orquestração Assíncrona:** O GitHub exige respostas HTTP 200 no webhook em menos de 10 segundos, sob pena de timeout. Como a IA pode levar mais que isso para processar, a arquitetura precisou ser refatorada para utilizar `BackgroundTasks` no FastAPI.
 
 ## Melhorias futuras (Caminho de refatoração para produção)
-1. **Fim dos Mocks e Integração SAST Real:** Atualmente, a POC do Quality Gate e o LLM consomem números de testes simulados no `api/main.py`. Em produção, o pipeline fará requisições dinâmicas a ferramentas de segurança Enterprise instaladas na pipeline da empresa (SonarQube, Checkmarx).
+1. **Integração SAST/DAST Real:** Atualmente, o Quality Gate avalia a segurança varrendo o Diff em tempo real atrás de vetores de vulnerabilidade. Em uma refatoração para produção corporativa, o pipeline poderá ser acoplado para fazer requisições dinâmicas a ferramentas de segurança Enterprise (SonarQube, Checkmarx) para injetar as métricas de `Violations` com maior precisão estática.
 2. **PostgreSQL Descentralizado:** Transição do SQLite persistido em volume local para um banco de dados transacional relacional AWS RDS, suportando concorrência e múltiplos repositórios simultâneos.
 3. **Assinatura Criptográfica:** Blindar a rota do webhook pública validando o payload via `X-Hub-Signature-256`.
 
