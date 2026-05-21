@@ -1,7 +1,5 @@
 # Blueprint - PR Babysitter
 
-teste 5
-
 ## Fases e Objetivos
 1. **Fase 1 (V - Visão):** Responder às Perguntas de Descoberta e definir Schemas em `gemini.md`.
 2. **Fase 2 (L - Link):** Configurar `.env` e testar integrações (GitHub API, LLM API, Ferramentas de Linter).
