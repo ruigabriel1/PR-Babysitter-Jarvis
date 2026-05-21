@@ -50,12 +50,9 @@ docker-compose up --build -d
 ```
 > **Nota Mágica:** Você não precisa baixar a IA manualmente. O entrypoint customizado do nosso `docker-compose.yml` fará o Pull de 2.0GB do *Llama 3.2* sozinho antes de abrir a porta da aplicação. Aguarde cerca de 3 minutos.
 
-**3. Tunelamento**
-Exponha o container local:
-```bash
-ngrok http 8000
-```
-Cadastre o link resultante (`https://seu-link.ngrok-free.app/webhook`) nas configurações do seu repositório no GitHub (*Settings > Webhooks*), assinando os eventos de `Pull request`.
+**3. Tunelamento Zero-Config (Smee.io)**
+Diferente de outras arquiteturas que exigem `ngrok` e configurações complexas de IP e portas, este Agente vem com um túnel na nuvem embutido.
+A variável `SMEE_URL` no arquivo `.env` diz para o container capturar automaticamente os eventos do GitHub da nuvem e trazê-los para a sua máquina local de forma transparente. Nenhuma porta precisou ser exposta!
 
 ## Caso de Teste Explícito (Prova de Fogo)
 O Agente foi programado para atuar no **Mundo Real**. Ele fará o download do Diff do seu PR, calculará matematicamente a regressão de cobertura e tamanho da base de código, e o Llama 3.2 atuará como um **Hacker Ético (Red Team)** para encontrar falhas de segurança reais.

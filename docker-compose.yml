@@ -15,6 +15,15 @@ services:
       - ollama
     command: uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload
 
+  smee-client:
+    image: probot/smee-client
+    container_name: jarvis_smee
+    depends_on:
+      - api
+    env_file:
+      - .env
+    command: -u ${SMEE_URL} -t http://api:8000/webhook
+
   ollama:
     image: ollama/ollama:latest
     container_name: jarvis_ollama
