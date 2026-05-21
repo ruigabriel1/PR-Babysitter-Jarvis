@@ -7,6 +7,11 @@ import uvicorn
 
 app = FastAPI(title="PR Babysitter API - Jarvis")
 
+# Função inútil para disparar o Linter e a IA
+def variavel_inutil_para_teste():
+    x = "Essa variável não é usada e deve irritar o Jarvis."
+    return None
+
 @app.get("/", response_class=HTMLResponse)
 def dashboard():
     return """
