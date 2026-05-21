@@ -1,6 +1,5 @@
 # Blueprint - PR Babysitter
 
-test / teste 2 / 3
 
 ## Fases e Objetivos
 1. **Fase 1 (V - Visão):** Responder às Perguntas de Descoberta e definir Schemas em `gemini.md`.
