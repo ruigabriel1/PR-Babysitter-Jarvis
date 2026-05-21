@@ -1,3 +1,5 @@
+name: pr-babysitter-jarvis
+
 services:
   api:
     build: .
