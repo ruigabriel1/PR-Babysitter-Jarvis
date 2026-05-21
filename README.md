@@ -1,6 +1,6 @@
 # PR Babysitter (Jarvis)
 
-Agente Autônomo de Code Review integrado ao fluxo de CI/CD para repositórios GitHub. O PR Babysitter atua como um Quality Gate automatizado, realizando análises diferenciais de código e fornecendo feedbacks estruturados diretamente nos Pull Requests utilizando inteligência artificial local (Phi-3).
+Agente Autônomo de Code Review integrado ao fluxo de CI/CD para repositórios GitHub. O PR Babysitter atua como um Quality Gate automatizado, realizando análises diferenciais de código e fornecendo feedbacks estruturados diretamente nos Pull Requests utilizando inteligência artificial local (Llama 3.2).
 
 ## Arquitetura e Componentes
 
@@ -8,7 +8,7 @@ O agente foi desenvolvido com foco em determinismo, baixa latência e segurança
 
 - **Camada de Orquestração (FastAPI):** Gerencia a recepção de webhooks (`opened`, `synchronize`, `closed`) de forma assíncrona, garantindo resiliência contra timeouts da API do GitHub.
 - **Camada de Análise (Quality Gate):** Implementa regras de negócio estritas (vulnerabilidades, cobertura de testes e complexidade ciclomática) baseadas em deltas (`Δ`). O código não é promovido à branch principal caso degrade as métricas atuais (Baseline).
-- **Camada Cognitiva (LLM Local):** Utiliza o modelo Phi-3 empacotado via Docker/Ollama para fornecer análises de código (*code reviews*) interpretativas e sugerir refatorações pontuais no formato de comentários *inline*.
+- **Camada Cognitiva (LLM Local):** Utiliza o modelo Llama 3.2 empacotado via Docker/Ollama para fornecer análises de código (*code reviews*) interpretativas e sugerir refatorações pontuais no formato de comentários *inline*.
 
 ### Armazenamento da Baseline
 Para manter o estado do repositório íntegro e imutável durante as avaliações do Pull Request, a fonte da verdade das métricas (Baseline) é armazenada em um banco de dados SQLite persistido no volume Docker. A Baseline é retroalimentada unicamente mediante a interceptação do evento de *Merge* consolidado na branch `master`.
@@ -16,7 +16,7 @@ Para manter o estado do repositório íntegro e imutável durante as avaliaçõe
 ## Requisitos de Infraestrutura
 
 - **Docker & Docker Compose:** Obrigatório para a orquestração do ecossistema e isolamento dos serviços (API + Ollama).
-- **Recursos Computacionais:** Recomenda-se alocação mínima de 8GB de RAM para estabilidade inferencial do modelo Phi-3.
+- **Recursos Computacionais:** Recomenda-se alocação mínima de 8GB de RAM para estabilidade inferencial do modelo Llama 3.2.
 - **GitHub Personal Access Token (PAT):** Token Clássico do GitHub, configurado com privilégios completos sob o escopo `repo`, para conceder permissões de leitura/escrita na Commit Status API e publicação de Pull Request Reviews.
 
 ## Deploy e Inicialização
@@ -29,12 +29,12 @@ O sistema foi arquitetado para *plug and play* em ambientes conteinerizados, eli
    GITHUB_TOKEN=ghp_SEU_TOKEN_DE_SERVICO
    ```
 
-2. **Subida dos Serviços:**
-   Realize a construção e subida dos containers em modo *detached*:
+2. **Subida dos Serviços (First Try / Zero-Config):**
+   A arquitetura garante execução *First Try* sem a necessidade de downloads paralelos ou acionamentos manuais do Ollama. Realize a subida consolidada:
    ```bash
    docker-compose up --build -d
    ```
-   *Nota: A primeira execução efetuará automaticamente o download do modelo Phi-3 para o respectivo volume.*
+   *Nota: No primeiro start-up, o entrypoint customizado do Docker fará automaticamente o `pull` da imagem do Llama 3.2 e inicializará a API em cascata.*
 
 3. **Configuração do Webhook no Repositório:**
    - Exponha o serviço na porta `8000` via Ingress, API Gateway ou túnel seguro.
