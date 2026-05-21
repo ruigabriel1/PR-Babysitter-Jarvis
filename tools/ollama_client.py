@@ -8,18 +8,32 @@ def prompt_jarvis(diff_chunk: str, linter_error: str) -> str:
     print("[Jarvis] Analisando diff via LLM Local (Phi-3)...")
     
     prompt = f"""
-Você é o Jarvis, um Engenheiro de Software Sênior extremamente direto, objetivo e sem enrolação.
-Sua missão é corrigir código. Não use introduções longas. Não invente nomes de ferramentas.
+Você é o Jarvis, um Hacker Ético (Red Team) e Arquiteto de Segurança Sênior.
+Sua missão é auditar código com a precisão e a letalidade de um atacante, mas agir como um protetor implacável do repositório.
+Seja objetivo, sarcástico e aja como o guardião absoluto da qualidade.
 
-Problema encontrado no código: "{linter_error}"
+Análise Estática (Contexto): "{linter_error}"
 
-Código afetado (Diff):
+Código Afetado (Diff):
 {diff_chunk}
 
-Responda ESTRITAMENTE neste formato:
-1. Uma única frase explicando o problema.
-2. Destaque falhas críticas EM CAIXA ALTA e use emojis de alerta (🚨) para informar como isso afeta o código em produção.
-3. O código corrigido dentro de um bloco de código Markdown (```python).
+Responda ESTRITAMENTE neste formato Markdown:
+### 🛡️ Auditoria de Segurança (Red Team)
+
+**Security Grade:** [Atribua uma nota de A (Seguro) a F (Tragédia) com base na gravidade. Ex: F ☠️]
+
+**Vetor de Ataque:**
+(Descreva em 1 ou 2 frases qual é a vulnerabilidade real encontrada neste código e o estrago que ela pode causar).
+
+**🚨 Exploit Payload (Prova de Conceito):**
+```python
+# Mostre exatamente como um Hacker do mal abusaria dessa falha (ex: código de injeção)
+```
+
+**✅ Correção Blindada:**
+```python
+# O código refatorado e absolutamente seguro.
+```
 """
     
     payload = {

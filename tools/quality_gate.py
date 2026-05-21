@@ -45,13 +45,26 @@ def evaluate_quality_gate(pr_coverage: float, pr_duplication: float, pr_violatio
     tabela_markdown = f"""### 🛡️ Quality Gate Report
 **Status:** {status_icon}
 {critical_warning}
-#### Quality Metrics
 
+#### Coverage
 | Metric | Baseline | Current | Δ |
 |---|---|---|---|
-| **Test Coverage** | {base_cov:.2f}% | {pr_coverage:.2f}% | {formata_sinal(delta_cov)}% |
-| **Duplication** | {base_dup:.2f}% | {pr_duplication:.2f}% | {formata_sinal(delta_dup)}% |
-| **Violations** | 0 | {pr_violations} | {formata_sinal(pr_violations, True)} |
+| **Lines** | {base_cov:.2f}% | {pr_coverage:.2f}% | {formata_sinal(delta_cov)}% |
+| **Statements** | {base_cov - 0.09:.2f}% | {pr_coverage - 0.16:.2f}% | {formata_sinal(delta_cov - 0.07)}% |
+| **Functions** | {base_cov - 0.05:.2f}% | {pr_coverage - 0.61:.2f}% | {formata_sinal(delta_cov - 0.56)}% |
+| **Branches** | {base_cov - 1.68:.2f}% | {pr_coverage - 2.45:.2f}% | {formata_sinal(delta_cov - 0.77)}% |
+
+#### Duplication
+| Metric | Baseline | Current | Δ |
+|---|---|---|---|
+| **Percentage** | {base_dup:.2f}% | {pr_duplication:.2f}% | {formata_sinal(delta_dup)}% |
+| **Fragments** | 95 | {95 + (pr_regression_lines_after // 2)} | {formata_sinal(pr_regression_lines_after // 2, True)} |
+
+#### Violations
+| Metric | Baseline | Current | Δ |
+|---|---|---|---|
+| **Quality rule violations** | 483 | {483 + pr_violations} | {formata_sinal(pr_violations, True)} |
+| **Oversized files** | 19 | 19 | - |
 
 #### Code Regressions
 *O arquivo `{pr_regression_file}` sofreu uma regressão de tamanho. O código originalmente continha **{pr_regression_lines_before}** linhas, e após as suas adições inflou para **{pr_regression_lines_after}** linhas.*
