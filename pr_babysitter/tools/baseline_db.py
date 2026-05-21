@@ -5,6 +5,12 @@ import datetime
 
 # Persistência no volume montado
 DB_PATH = os.path.join(os.path.dirname(__file__), '..', '.tmp', 'baseline.db')
+
+# Garantir que a pasta .tmp exista antes do SQLAlchemy tentar criar o arquivo .db
+db_dir = os.path.dirname(DB_PATH)
+if not os.path.exists(db_dir):
+    os.makedirs(db_dir, exist_ok=True)
+
 engine = create_engine(f'sqlite:///{DB_PATH}', echo=False)
 Base = declarative_base()
 
