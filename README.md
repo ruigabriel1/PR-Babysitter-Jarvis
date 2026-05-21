@@ -49,35 +49,32 @@ Extraia o `.zip` da entrega e, no diretório raiz, execute a subida dos serviço
 ```bash
 docker-compose up --build -d
 ```
-> **Nota Mágica:** Você não precisa baixar a IA manualmente. O entrypoint customizado fará o Pull automático de 2GB do *Llama 3.2* e iniciará o servidor da API. O `smee-client` também subirá automaticamente em background, conectando a sua máquina local diretamente aos Webhooks do meu repositório no GitHub de forma transparente! Aguarde ~3 minutos.
+> **Processo de Inicialização (Automático):** O *entrypoint* do contêiner fará o download da imagem do *Llama 3.2* (~2GB) e subirá o servidor FastAPI em conjunto com o `smee-client` (para roteamento seguro de webhooks). Todo o fluxo de provisionamento e tunelamento ocorre automaticamente. Aguarde aproximadamente 3 minutos para a estabilização dos serviços.
 
-## Caso de Teste Explícito (Prova de Fogo)
-O Agente atua no **Mundo Real**. Ele faz o download dinâmico do Diff, calcula as regressões matemáticas, e o Llama 3.2 atua encarnando uma persona de **Hacker Ético (Red Team)** para auditar vulnerabilidades.
+## Caso de Teste Explícito: Auditoria Dinâmica e Qualidade de Código
+O PR Babysitter opera processando dados reais do Pull Request. O agente executa o download do *Diff* remoto, processa métricas quantitativas de regressão (Quality Gate) e aciona a IA para realizar uma auditoria focada em segurança da informação (Red Team).
 
-Siga estes passos exatos para testar o Agente rodando na sua máquina:
+Siga as etapas abaixo para validar o fluxo end-to-end do agente rodando a partir do seu ambiente local:
 
-1. O Docker já deve estar rodando localmente (veja o passo acima).
-2. Acesse o meu repositório oficial no GitHub: [https://github.com/ruigabriel1/PR-Babysitter-Jarvis](https://github.com/ruigabriel1/PR-Babysitter-Jarvis)
-3. Para conseguir enviar código para o meu repositório sem precisar fazer um Fork, você utilizará o meu próprio Token (que já está no arquivo `.env` que você descompactou).
-4. No seu terminal, clone o repositório utilizando o Token embutido na URL de autenticação:
+1. Certifique-se de que os serviços do Docker já estão em execução (conforme passo anterior).
+2. No terminal, clone o repositório original utilizando o PAT fornecido no arquivo `.env`. Isso garante a permissão de envio (Push) direto para o repositório base sem a necessidade de criação de um Fork:
    ```bash
    git clone https://<COLE_O_TOKEN_DO_ENV_AQUI>@github.com/ruigabriel1/PR-Babysitter-Jarvis.git
    ```
-5. Entre na pasta clonada e crie uma nova branch:
+3. Acesse o diretório clonado e isole o ambiente de teste em uma nova branch:
    ```bash
    cd PR-Babysitter-Jarvis
-   git checkout -b teste-banca-avaliadora
+   git checkout -b teste-auditoria-agente
    ```
-6. Copie e cole todo o conteúdo do arquivo `evaluator_test_template.py` para dentro de um arquivo novo qualquer. *(Esse template contém uso malicioso de `eval`, `os.system`, senhas expostas e código inútil para explodir a duplicação).*
-7. Efetue o *Commit* e o *Push* diretamente para o meu repositório:
+4. Crie um novo script na raiz do projeto (ex: `analise_risco.py`) e cole todo o conteúdo do arquivo `evaluator_test_template.py`. Este *template* contém intencionalmente violações graves de segurança (uso de `eval`, chamadas `os.system` e credenciais *hardcoded*), além de instruções vazias para forçar quedas matemáticas de cobertura.
+5. Submeta as alterações para o repositório remoto:
    ```bash
    git add .
-   git commit -m "Teste de invasão"
-   git push origin teste-banca-avaliadora
+   git commit -m "Teste: Submissão de código vulnerável"
+   git push origin teste-auditoria-agente
    ```
-8. Acesse a página do repositório no GitHub e abra um **Pull Request**.
-9. **A Magia:** Vá para a aba do Pull Request no meu repositório. Como o GitHub disparou o Webhook para o Smee, a API *rodando na sua máquina física* receberá o payload, processará o Diff com o Llama 3.2 local, e usará o Token embutido no `.env` para postar a resposta de volta no GitHub!
-10. Em poucos segundos, você verá:
-   - As **Tabelas de Quality Gate** (Coverage penalizada, Duplication e Violations).
-   - O veredito de falha (*Failed*).
-   - O **Dossiê do Red Team** gerado pela IA contendo a Nota de Segurança (Security Grade), o Vetor de Ataque e um *Exploit Payload* simulando o ataque real.
+6. Acesse o repositório oficial no GitHub ([PR-Babysitter-Jarvis](https://github.com/ruigabriel1/PR-Babysitter-Jarvis)) e proceda com a abertura de um **Pull Request**.
+7. **Validação do Pipeline:** A criação do PR acionará o Webhook público. O evento será roteado pelo `smee.io` até a sua infraestrutura Docker local, onde o *Diff* será decodificado, analisado pelo *Llama 3.2* e o relatório de auditoria será devolvido ao GitHub através do Token configurado no container.
+8. Retorne à aba do seu Pull Request. Em poucos segundos, o Agente postará:
+   - **Quality Gate Metrics:** Tabelas com a penalização matemática no *Coverage*, métricas de *Duplication* e contagem de *Violations*.
+   - **Red Team Dossier:** Um laudo de segurança emitido pela IA contendo a nota de risco (*Security Grade*), a análise técnica do vetor de ataque e um *Exploit Payload* simulando como o código seria comprometido.
