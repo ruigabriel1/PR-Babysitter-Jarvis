@@ -22,7 +22,7 @@ A solução foi arquitetada em 3 camadas de orquestração:
 - Práticas avançadas de Prompt Engineering necessárias para extrair formatação de código impecável (Markdown) de LLMs menores (sub-5B).
 
 ## Dificuldades
-- **Cegueira de DNS no Docker/WSL2:** Durante a integração, a API interna falhou na comunicação com a LLM local (`[Errno -2] Name or service not known`). O subsistema Windows (WSL2) muitas vezes entra em conflito com o DNS interno do Docker. **Solução Arquitetural:** Em vez de depender de nomes de host instáveis (`host.docker.internal`), a arquitetura foi refatorada no `docker-compose.yml` para criar uma **Sub-rede Estática (VPC 172.20.0.x)**. Fixamos o IP do Ollama para forçar um roteamento direto (IP-to-IP) a partir da API, garantindo robustez extrema e tolerância a falhas de rede do Host.
+
 - **Orquestração Assíncrona:** O GitHub exige respostas HTTP 200 no webhook em menos de 10 segundos, sob pena de timeout. Como a IA pode levar mais que isso para processar, a arquitetura precisou ser refatorada para utilizar `BackgroundTasks` no FastAPI.
 
 ## Melhorias futuras (Caminho de refatoração para produção)
