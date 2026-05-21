@@ -22,7 +22,7 @@ A solução foi arquitetada em 3 camadas de orquestração:
 - Práticas avançadas de Prompt Engineering necessárias para extrair formatação de código impecável (Markdown) de LLMs menores (sub-5B).
 
 ## Dificuldades
-- **Loop do DNS no Docker/WSL:** Durante a integração, a API interna falhou na comunicação com a API do GitHub (`[Errno -3]`). Foi necessário intervir no `docker-compose.yml` para injetar nameservers estáticos do Google (`8.8.8.8`) para superar a falha do subsistema Windows.
+- **Cegueira de DNS no Docker/WSL2:** Durante a integração, a API interna falhou na comunicação com a LLM local (`[Errno -2] Name or service not known`). O subsistema Windows (WSL2) muitas vezes entra em conflito com o DNS interno do Docker. **Solução Arquitetural:** Em vez de depender de nomes de host instáveis (`host.docker.internal`), a arquitetura foi refatorada no `docker-compose.yml` para criar uma **Sub-rede Estática (VPC 172.20.0.x)**. Fixamos o IP do Ollama para forçar um roteamento direto (IP-to-IP) a partir da API, garantindo robustez extrema e tolerância a falhas de rede do Host.
 - **Orquestração Assíncrona:** O GitHub exige respostas HTTP 200 no webhook em menos de 10 segundos, sob pena de timeout. Como a IA pode levar mais que isso para processar, a arquitetura precisou ser refatorada para utilizar `BackgroundTasks` no FastAPI.
 
 ## Melhorias futuras (Caminho de refatoração para produção)
@@ -68,4 +68,7 @@ Siga estes passos exatos para presenciar o Agente reprovando um PR:
    ```
 3. Crie uma nova branch para isso (`test-jarvis`) e efetue o *Commit*.
 4. Abra o **Pull Request** para a branch `master`.
-5. Vá para o painel principal do Pull Request. Em menos de 10 segundos, o PR Babysitter identificará o código através do Webhook, reprovará o código matemático no painel de Checks (o mock foi desenhado para travar), e postará um comentário gigantesco em Markdown fornecendo a justificativa exata, a métrica de gravidade, e como consertar.
+5. Vá para o painel principal do Pull Request. Em menos de 10 segundos, o PR Babysitter identificará o código através do Webhook e calculará o **Quality Gate**. O mock foi desenhado para travar, então ele postará um relatório estruturado avaliando:
+   - **Quality Metrics:** Test Coverage, Duplication e Violations (com cálculo de `Δ`).
+   - **Code Regressions:** Tamanho do arquivo inflado.
+   - **Codex Review:** O LLM (Llama 3.2) fará a auditoria final, berrando em vermelho (`> [!CAUTION] 🚨`) as falhas críticas e fornecendo a refatoração do código sugerida.

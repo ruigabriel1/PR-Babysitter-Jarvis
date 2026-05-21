@@ -1,6 +1,6 @@
 import httpx
 
-OLLAMA_URL = "http://ollama:11434/api/generate"
+OLLAMA_URL = "http://172.20.0.5:11434/api/generate"
 MODEL = "llama3.2"
 
 def prompt_jarvis(diff_chunk: str, linter_error: str) -> str:
