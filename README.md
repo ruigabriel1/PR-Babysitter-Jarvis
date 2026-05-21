@@ -31,39 +31,34 @@ A solução foi arquitetada em 3 camadas de orquestração:
 3. **Assinatura Criptográfica:** Blindar a rota do webhook pública validando o payload via `X-Hub-Signature-256`.
 
 ## Tutorial de como testar (Deploy "First Try")
-O ecossistema foi envelopado em um contêiner *Zero-Config*.
+Pensando na Banca Avaliadora, o ecossistema foi projetado com uma arquitetura **Zero-Config**. 
+Você não precisa criar Tokens, não precisa configurar Webhooks, não precisa de Ngrok e não precisa alterar nenhuma variável. O arquivo `.zip` já foi entregue contendo um `.env` **100% funcional**, injetado com um PAT de acesso restrito e o túnel na nuvem (`smee.io`) pré-configurado.
 
 **1. Requisitos Prévios**
-- Docker Desktop e Git instalados e em execução.
-- Ter configurado um Ngrok para gerar o túnel seguro.
-- Possuir uma conta no GitHub e gerar um Personal Access Token (PAT).
+- Docker Desktop instalado e em execução.
+- Conta no GitHub.
 
 **2. O Primeiro Run (First Try)**
-Na raiz deste repositório, abra o arquivo **`.env`** (ou copie a partir do `.env.example` se estiver clonando do GitHub) e preencha o seu token:
-```env
-GITHUB_TOKEN=ghp_SEU_TOKEN_AQUI
-```
-
-Execute a subida absoluta dos serviços:
+Extraia o `.zip` da entrega e, no diretório raiz, execute a subida dos serviços:
 ```bash
 docker-compose up --build -d
 ```
-> **Nota Mágica:** Você não precisa baixar a IA manualmente. O entrypoint customizado do nosso `docker-compose.yml` fará o Pull de 2.0GB do *Llama 3.2* sozinho antes de abrir a porta da aplicação. Aguarde cerca de 3 minutos.
-
-**3. Tunelamento Zero-Config (Smee.io)**
-Diferente de outras arquiteturas que exigem `ngrok` e configurações complexas de IP e portas, este Agente vem com um túnel na nuvem embutido.
-A variável `SMEE_URL` no arquivo `.env` diz para o container capturar automaticamente os eventos do GitHub da nuvem e trazê-los para a sua máquina local de forma transparente. Nenhuma porta precisou ser exposta!
+> **Nota Mágica:** Você não precisa baixar a IA manualmente. O entrypoint customizado fará o Pull automático de 2GB do *Llama 3.2* e iniciará o servidor da API. O `smee-client` também subirá automaticamente em background, conectando a sua máquina local diretamente aos Webhooks do meu repositório no GitHub de forma transparente! Aguarde ~3 minutos.
 
 ## Caso de Teste Explícito (Prova de Fogo)
-O Agente foi programado para atuar no **Mundo Real**. Ele fará o download do Diff do seu PR, calculará matematicamente a regressão de cobertura e tamanho da base de código, e o Llama 3.2 atuará como um **Hacker Ético (Red Team)** para encontrar falhas de segurança reais.
+O Agente atua no **Mundo Real**. Ele faz o download dinâmico do Diff, calcula as regressões matemáticas, e o Llama 3.2 atua encarnando uma persona de **Hacker Ético (Red Team)** para auditar vulnerabilidades.
 
-Siga estes passos exatos para testar a fúria do Agente:
+Siga estes passos exatos para testar o Agente rodando na sua máquina:
 
-1. Na raiz do repositório (na branch `master`), existe um arquivo chamado `evaluator_test_template.py`. Ele contém código malicioso disfarçado (uso de `eval`, `os.system` e senhas hardcoded), além de dezenas de linhas inúteis para inflar a métrica de duplicação.
-2. Crie uma nova branch na sua máquina (ex: `test-red-team`).
-3. Renomeie o arquivo `evaluator_test_template.py` para qualquer outro nome, como `critical_error.py` (ou crie um novo arquivo e cole o conteúdo lá dentro).
-4. Efetue o *Commit* e o *Push* para a nova branch.
-5. Abra o **Pull Request** para a branch `master` no GitHub.
-6. Vá para o painel principal do Pull Request. O Webhook disparará a API localmente.
-7. Em menos de 10 segundos, o Agente postará o **Quality Gate Report** estruturado com as tabelas de `Coverage`, `Duplication` e `Violations`. Você verá a cobertura despencar matematicamente devido às linhas injetadas.
-8. Abaixo do relatório, você lerá a **Auditoria de Segurança (Red Team)** gerada pelo Llama 3.2, onde ele atribuirá um `Security Grade`, descreverá o vetor de ataque das suas vulnerabilidades, e escreverá um *Exploit Payload* simulando como um Hacker atacaria aquele PR!
+1. O Docker já deve estar rodando localmente (veja o passo acima).
+2. Acesse o meu repositório oficial no GitHub: [https://github.com/ruigabriel1/PR-Babysitter-Jarvis](https://github.com/ruigabriel1/PR-Babysitter-Jarvis)
+3. Faça um **Fork** do repositório para a sua conta do GitHub.
+4. No seu Fork recém-criado, crie um novo arquivo chamado `teste_seguranca.py`.
+5. Copie e cole todo o conteúdo do arquivo `evaluator_test_template.py` (que está na raiz do projeto) para dentro deste novo arquivo. *(Ele contém uso malicioso de `eval`, `os.system`, senhas expostas e código inútil para explodir a duplicação).*
+6. Faça o commit no seu Fork.
+7. Abra um **Pull Request** do seu Fork enviando o código para a branch `master` do MEU repositório original.
+8. **A Magia:** Vá para a aba do Pull Request no meu repositório. Como o GitHub disparou o Webhook para o Smee, a API *rodando na sua máquina física* receberá o payload, processará o Diff com o Llama 3.2 local, e usará o Token embutido no `.env` para postar a resposta de volta no GitHub!
+9. Em poucos segundos, você verá:
+   - As **Tabelas de Quality Gate** (Coverage penalizada, Duplication e Violations).
+   - O veredito de falha (*Failed*).
+   - O **Dossiê do Red Team** gerado pela IA contendo a Nota de Segurança (Security Grade), o Vetor de Ataque e um *Exploit Payload* simulando o ataque real.
