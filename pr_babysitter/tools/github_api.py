@@ -1,5 +1,9 @@
 import os
 import httpx
+from dotenv import load_dotenv
+
+# Força o carregamento do arquivo .env quando rodando via Uvicorn local
+load_dotenv()
 
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 HEADERS = {
