@@ -18,7 +18,7 @@ Código afetado (Diff):
 
 Responda ESTRITAMENTE neste formato:
 1. Uma única frase explicando o problema.
-2. Uma única frase informando o nível de criticidade e como isso afeta o código em produção.
+2. Destaque falhas críticas EM CAIXA ALTA e use emojis de alerta (🚨) para informar como isso afeta o código em produção.
 3. O código corrigido dentro de um bloco de código Markdown (```python).
 """
     
