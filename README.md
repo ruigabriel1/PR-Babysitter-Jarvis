@@ -1,55 +1,71 @@
-# PR Babysitter (Jarvis)
+# PR Babysitter (Jarvis) 🤖
 
-Agente Autônomo de Code Review integrado ao fluxo de CI/CD para repositórios GitHub. O PR Babysitter atua como um Quality Gate automatizado, realizando análises diferenciais de código e fornecendo feedbacks estruturados diretamente nos Pull Requests utilizando inteligência artificial local (Llama 3.2).
+## Descrição
+O PR Babysitter é um Agente Autônomo de Code Review integrado ao fluxo de CI/CD para repositórios GitHub. Ele atua como um Quality Gate automatizado, realizando análises diferenciais de código e fornecendo feedbacks estruturados diretamente nos Pull Requests utilizando inteligência artificial local.
 
-## Arquitetura e Componentes
+## O Desafio
+O desafio técnico consistia em criar um Agente Autônomo capaz de atuar em uma etapa crítica do ciclo de vida de desenvolvimento (SDLC). A principal restrição arquitetural (A.N.T Layer 1) exigia que o modelo de inteligência artificial rodasse de forma 100% local, em ambiente isolado via Docker, garantindo a privacidade absoluta do código corporativo e zero dependência de APIs externas pagas (como OpenAI). O agente precisava não apenas apontar erros, mas bloquear ativamente o envio de código ruim para produção (Quality Gate).
 
-O agente foi desenvolvido com foco em determinismo, baixa latência e segurança, adotando o protocolo estrutural de 3 camadas:
+## A Solução
+A solução foi arquitetada em 3 camadas de orquestração:
+1. **Camada de Orquestração (FastAPI):** Um servidor web assíncrono que intercepta eventos do GitHub (via Webhooks).
+2. **Camada de Análise (Quality Gate):** Um motor matemático que calcula métricas diferenciais (`Δ`) de Cobertura, Segurança e Complexidade. O sistema usa um banco de dados **SQLite** embarcado para manter a "Baseline" da branch `master`.
+3. **Camada Cognitiva (Ollama + Llama 3.2):** O coração da inteligência. Um LLM leve e altamente capaz, rodando internamente no Docker, que recebe os *diffs* reprovados e posta as correções *inline* como um engenheiro Sênior.
 
-- **Camada de Orquestração (FastAPI):** Gerencia a recepção de webhooks (`opened`, `synchronize`, `closed`) de forma assíncrona, garantindo resiliência contra timeouts da API do GitHub.
-- **Camada de Análise (Quality Gate):** Implementa regras de negócio estritas (vulnerabilidades, cobertura de testes e complexidade ciclomática) baseadas em deltas (`Δ`). O código não é promovido à branch principal caso degrade as métricas atuais (Baseline).
-- **Camada Cognitiva (LLM Local):** Utiliza o modelo Llama 3.2 empacotado via Docker/Ollama para fornecer análises de código (*code reviews*) interpretativas e sugerir refatorações pontuais no formato de comentários *inline*.
+## Justificativa das propostas e escolhas técnicas
+- **LLM Escolhido (Llama 3.2):** Inicialmente testado com Phi-3, o agente foi migrado para o recém-lançado Llama 3.2 (3 Bilhões de parâmetros) para entregar Code Reviews mais assertivas, sem alucinações, e ainda mantendo um consumo baixo de RAM (cerca de 2GB) para suportar execução em hardware padrão.
+- **Engenharia de Prompt (Dictatorial):** O prompt do LLM foi formatado de forma rígida para gerar saídas estritas contendo apenas: 1 frase de diagnóstico, 1 frase de nível de criticidade e 1 bloco Markdown. Isso eliminou a verbosidade clássica dos modelos menores.
+- **Estratégia de Status Check ("COMMENT" vs "REQUEST_CHANGES"):** Para contornar a limitação de API do GitHub que proíbe "Self-Reviews", o agente foi programado para injetar regras via eventos `COMMENT`, sincronizando o veredito (Pass/Fail) com o painel de *Commit Status Check*, habilitando a proteção efetiva de branches corporativas.
 
-### Armazenamento da Baseline
-Para manter o estado do repositório íntegro e imutável durante as avaliações do Pull Request, a fonte da verdade das métricas (Baseline) é armazenada em um banco de dados SQLite persistido no volume Docker. A Baseline é retroalimentada unicamente mediante a interceptação do evento de *Merge* consolidado na branch `master`.
+## Pontos aprendidos
+- Entendimento profundo sobre as barreiras da Virtualização (WSL2) no Windows, especificamente em relação à perda de resolução de DNS interno de containers que afeta requisições SSL externas.
+- Práticas avançadas de Prompt Engineering necessárias para extrair formatação de código impecável (Markdown) de LLMs menores (sub-5B).
 
-## Requisitos de Infraestrutura
+## Dificuldades
+- **Loop do DNS no Docker/WSL:** Durante a integração, a API interna falhou na comunicação com a API do GitHub (`[Errno -3]`). Foi necessário intervir no `docker-compose.yml` para injetar nameservers estáticos do Google (`8.8.8.8`) para superar a falha do subsistema Windows.
+- **Orquestração Assíncrona:** O GitHub exige respostas HTTP 200 no webhook em menos de 10 segundos, sob pena de timeout. Como a IA pode levar mais que isso para processar, a arquitetura precisou ser refatorada para utilizar `BackgroundTasks` no FastAPI.
 
-- **Docker & Docker Compose:** Obrigatório para a orquestração do ecossistema e isolamento dos serviços (API + Ollama).
-- **Recursos Computacionais:** Recomenda-se alocação mínima de 8GB de RAM para estabilidade inferencial do modelo Llama 3.2.
-- **GitHub Personal Access Token (PAT):** Token Clássico do GitHub, configurado com privilégios completos sob o escopo `repo`, para conceder permissões de leitura/escrita na Commit Status API e publicação de Pull Request Reviews.
+## Melhorias futuras (Caminho de refatoração para produção)
+1. **Fim dos Mocks e Integração SAST Real:** Atualmente, a POC do Quality Gate e o LLM consomem números de testes simulados no `api/main.py`. Em produção, o pipeline fará requisições dinâmicas a ferramentas de segurança Enterprise instaladas na pipeline da empresa (SonarQube, Checkmarx).
+2. **PostgreSQL Descentralizado:** Transição do SQLite persistido em volume local para um banco de dados transacional relacional AWS RDS, suportando concorrência e múltiplos repositórios simultâneos.
+3. **Assinatura Criptográfica:** Blindar a rota do webhook pública validando o payload via `X-Hub-Signature-256`.
 
-## Deploy e Inicialização
+## Tutorial de como testar (Deploy "First Try")
+O ecossistema foi envelopado em um contêiner *Zero-Config*.
 
-O sistema foi arquitetado para *plug and play* em ambientes conteinerizados, eliminando fricções de dependências sistêmicas.
+**1. Requisitos Prévios**
+- Docker Desktop e Git instalados e em execução.
+- Ter configurado um Ngrok para gerar o túnel seguro.
+- Possuir uma conta no GitHub e gerar um Personal Access Token (PAT).
 
-1. **Configuração de Variáveis de Ambiente:**
-   Defina o arquivo `.env` na raiz da aplicação com o token de serviço do GitHub:
-   ```env
-   GITHUB_TOKEN=ghp_SEU_TOKEN_DE_SERVICO
+**2. O Primeiro Run (First Try)**
+Na raiz deste repositório, abra o arquivo **`.env`** (ou copie a partir do `.env.example` se estiver clonando do GitHub) e preencha o seu token:
+```env
+GITHUB_TOKEN=ghp_SEU_TOKEN_AQUI
+```
+
+Execute a subida absoluta dos serviços:
+```bash
+docker-compose up --build -d
+```
+> **Nota Mágica:** Você não precisa baixar a IA manualmente. O entrypoint customizado do nosso `docker-compose.yml` fará o Pull de 2.0GB do *Llama 3.2* sozinho antes de abrir a porta da aplicação. Aguarde cerca de 3 minutos.
+
+**3. Tunelamento**
+Exponha o container local:
+```bash
+ngrok http 8000
+```
+Cadastre o link resultante (`https://seu-link.ngrok-free.app/webhook`) nas configurações do seu repositório no GitHub (*Settings > Webhooks*), assinando os eventos de `Pull request`.
+
+## Caso de Teste Explícito
+Siga estes passos exatos para presenciar o Agente reprovando um PR:
+
+1. No seu repositório do GitHub (branch `master`), edite qualquer arquivo de código ou crie um arquivo simples (ex: `teste.py`).
+2. Digite a seguinte função propositalmente redundante:
+   ```python
+   def funcao_abandonada_para_o_jarvis():
+       print("Isso vai causar redução de cobertura!")
    ```
-
-2. **Subida dos Serviços (First Try / Zero-Config):**
-   A arquitetura garante execução *First Try* sem a necessidade de downloads paralelos ou acionamentos manuais do Ollama. Realize a subida consolidada:
-   ```bash
-   docker-compose up --build -d
-   ```
-   *Nota: No primeiro start-up, o entrypoint customizado do Docker fará automaticamente o `pull` da imagem do Llama 3.2 e inicializará a API em cascata.*
-
-3. **Configuração do Webhook no Repositório:**
-   - Exponha o serviço na porta `8000` via Ingress, API Gateway ou túnel seguro.
-   - Navegue até as configurações do repositório alvo (`Settings > Webhooks`) e cadastre a rota pública finalizada em `/webhook`.
-   - Content type: `application/json`.
-   - Eventos inscritos: `Pull requests`.
-
-## Orientações e Fluxo de Operação
-
-- **Bloqueios de Merge Institucionais:** A API atualizará continuamente o Status Check do GitHub. Recomenda-se fortemente habilitar a proteção de branch na `master` (*Require status checks to pass before merging*), atrelando o merge exclusivamente à aprovação da pipeline do Agente.
-- **Auto-Aprovação de Pull Requests:** O bot emite os vereditos estruturados atrelados à tag de evento `COMMENT` em vez de `APPROVE` / `REQUEST_CHANGES`. Isso garante compatibilidade corporativa universal, prevenindo restrições nativas da API do GitHub referentes a *Self-Review* nos casos em que a identidade executora for a mesma do autor do código.
-
-## Roteiro de Escalabilidade
-
-Para a adoção extensiva em ambiente de Produção, indica-se a aplicação das seguintes adequações:
-1. **Integração SAST/DAST Real (Fim dos Mocks):** Para tornar a avaliação do Agente 100% utilitária no mundo real, é necessário substituir os valores numéricos fixos de demonstração (Mock) presentes no arquivo `api/main.py` por integrações dinâmicas a parsers ou webhooks de ferramentas enterprise de análise estática (ex: SonarQube, Checkmarx, Fortify). A matemática do Quality Gate já está pronta e provada, basta "ligar os canos" para plugar as métricas reais.
-2. **Armazenamento Descentralizado:** Transição do SQLite de volume local para clusters PostgreSQL ou MySQL gerenciados (ex: AWS RDS), habilitando concorrência multi-repositório no mesmo Agente.
-3. **Assinatura Criptográfica:** Implementação do mecanismo `X-Hub-Signature-256` no FastAPI, blindando a rota de recepção pública de payloads de origem não certificada.
+3. Crie uma nova branch para isso (`test-jarvis`) e efetue o *Commit*.
+4. Abra o **Pull Request** para a branch `master`.
+5. Vá para o painel principal do Pull Request. Em menos de 10 segundos, o PR Babysitter identificará o código através do Webhook, reprovará o código matemático no painel de Checks (o mock foi desenhado para travar), e postará um comentário gigantesco em Markdown fornecendo a justificativa exata, a métrica de gravidade, e como consertar.
