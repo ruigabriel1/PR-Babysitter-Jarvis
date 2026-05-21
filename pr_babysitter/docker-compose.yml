@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  api:
+    build: .
+    container_name: jarvis_api
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./.tmp:/app/.tmp
+      - ./api:/app/api
+      - ./tools:/app/tools
+      - ./architecture:/app/architecture
+    env_file:
+      - .env
+    depends_on:
+      - ollama
+    command: uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: jarvis_ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    # Entrypoint customizado: sobe o server em background, espera 5s, e puxa/inicia o modelo Phi-3.
+    # O sleep 5 dá tempo do servidor do Ollama estar pronto para o 'run'.
+    entrypoint: >
+      /bin/sh -c "
+      /bin/ollama serve &
+      sleep 5 &&
+      /bin/ollama pull phi3 &&
+      tail -f /dev/null
+      "
+
+volumes:
+  ollama_data:
