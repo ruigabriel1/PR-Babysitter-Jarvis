@@ -6,6 +6,12 @@ O PR Babysitter é um Agente Autônomo de Code Review integrado ao fluxo de CI/C
 ## O Desafio
 O desafio técnico consistia em criar um Agente Autônomo capaz de atuar em uma etapa crítica do ciclo de vida de desenvolvimento (SDLC). A principal restrição arquitetural (A.N.T Layer 1) exigia que o modelo de inteligência artificial rodasse de forma 100% local, em ambiente isolado via Docker, garantindo a privacidade absoluta do código corporativo e zero dependência de APIs externas pagas (como OpenAI). O agente precisava não apenas apontar erros, mas bloquear ativamente o envio de código ruim para produção (Quality Gate).
 
+> [!NOTE] 
+> ### Contexto da Entrega (Nota do Autor)
+> Este projeto foi idealizado, desenhado e executado em **menos de 24 horas**, utilizando exclusivamente um ecossistema de ferramentas gratuitas e sem depender de nenhum recurso empresarial ou cloud corporativa privada (aos quais eu não tinha acesso). 
+> 
+> A arquitetura deste agente autônomo foi construída de ponta a ponta em sinergia com o **Antigravity**. Apesar do ambiente de restrição (hardware local, LLM de 3B parâmetros e APIs gratuitas), o **Jarvis** foi arquitetado com *Design Patterns* agnósticos. Isso significa que ele é um motor 100% escalável e configurável. Em um ambiente corporativo dotado de recursos adequados, ele pode ser plulgado a modelos colossais (GPT-4, Claude), integrado a pipelines maduros e configurado para auditar massivamente qualquer base de código e linguagem.
+
 ## A Solução
 A solução foi arquitetada em 3 camadas de orquestração:
 1. **Camada de Orquestração (FastAPI):** Um servidor web assíncrono que intercepta eventos do GitHub (via Webhooks).
