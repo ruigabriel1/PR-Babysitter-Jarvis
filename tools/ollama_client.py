@@ -1,6 +1,6 @@
 import httpx
 
-OLLAMA_URL = "http://ollama:11434/api/generate"
+OLLAMA_URL = "http://172.20.0.5:11434/api/generate"
 MODEL = "llama3.2"
 
 def prompt_jarvis(diff_chunk: str, linter_error: str) -> str:
@@ -18,7 +18,7 @@ Código afetado (Diff):
 
 Responda ESTRITAMENTE neste formato:
 1. Uma única frase explicando o problema.
-2. Uma única frase informando o nível de criticidade e como isso afeta o código em produção.
+2. Destaque falhas críticas EM CAIXA ALTA e use emojis de alerta (🚨) para informar como isso afeta o código em produção.
 3. O código corrigido dentro de um bloco de código Markdown (```python).
 """
     

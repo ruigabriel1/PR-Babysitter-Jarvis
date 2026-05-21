@@ -67,15 +67,17 @@ async def process_pr(payload: dict):
     # 1. Altera Status para Pendente
     set_commit_status(repo_full_name, head_sha, "pending", "Jarvis está validando as métricas...")
     
-    # 2. Mock de Métricas do Código (Demonstração da Catraca Travando)
+    # 2. Mock de Métricas do Código (Demonstração de Qualidade de Código)
     pr_coverage = 82.0 
-    pr_vulns = 1  # Forçando falha absoluta de segurança para teste
-    pr_complexity_score = 70.0
-    pr_best_practices = 80.0
-    pr_errors_score = 90.0
+    pr_duplication = 3.5
+    pr_violations = 1  # Falha crítica proposital
+    
+    pr_regression_file = "bad_code.py"
+    pr_regression_lines_before = 0
+    pr_regression_lines_after = 12
     
     # 3. Calcula o Quality Gate
-    gate_result = evaluate_quality_gate(pr_coverage, pr_vulns, pr_complexity_score, pr_best_practices, pr_errors_score)
+    gate_result = evaluate_quality_gate(pr_coverage, pr_duplication, pr_violations, pr_regression_file, pr_regression_lines_before, pr_regression_lines_after)
     
     if gate_result["pass"]:
         set_commit_status(repo_full_name, head_sha, "success", gate_result["reason"])
@@ -89,7 +91,7 @@ async def process_pr(payload: dict):
             diff_chunk="+ def unused_function():\n+    pass\n", 
             linter_error="W0612: Unused variable ou redução de cobertura."
         )
-        submit_pr_review(repo_full_name, pull_number, "COMMENT", f"**Sugestão de Correção (Babysit):**\n\n{jarvis_reply}")
+        submit_pr_review(repo_full_name, pull_number, "COMMENT", f"## Codex Review\n\n{jarvis_reply}")
 
 @app.post("/webhook")
 async def github_webhook(request: Request, background_tasks: BackgroundTasks):

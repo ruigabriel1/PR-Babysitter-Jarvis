@@ -1,19 +1,19 @@
 from tools.baseline_db import get_current_baseline
 
-def evaluate_quality_gate(pr_coverage: float, pr_vulns: int, pr_complexity_score: float, pr_best_practices: float, pr_errors_score: float) -> dict:
+def evaluate_quality_gate(pr_coverage: float, pr_duplication: float, pr_violations: int, pr_regression_file: str, pr_regression_lines_before: int, pr_regression_lines_after: int) -> dict:
     """
-    Calcula se a catraca deve abrir ou fechar seguindo o POP de arquitetura.
-    Retorna dict com 'pass' (bool) e 'reason' (str).
+    Calcula se a catraca deve abrir ou fechar seguindo métricas de qualidade de código.
+    Retorna dict com 'pass' (bool), 'reason' (str) e 'report' (str markdown).
     """
     baseline = get_current_baseline()
     
     # Fallback se a db estiver vazia
-    base_cov = baseline["test_coverage"] if baseline else 0.0
+    base_cov = baseline["test_coverage"] if baseline else 80.0
+    base_dup = 2.0
     
     # Formatação de relatório Markdown
     delta_cov = pr_coverage - base_cov
-    delta_vulns = pr_vulns - (baseline["critical_vulns"] if baseline else 0)
-    delta_comp = pr_complexity_score - (baseline["complexity_score"] if baseline else 0.0)
+    delta_dup = pr_duplication - base_dup
     
     def formata_sinal(d, is_int=False):
         sinal = "+" if d > 0 else ""
@@ -22,39 +22,41 @@ def evaluate_quality_gate(pr_coverage: float, pr_vulns: int, pr_complexity_score
         return f"{sinal}{d:.2f}"
 
     passed = True
-    motivo = ""
+    motivo = "Aprovado nas métricas de qualidade."
 
-    # 1. Regra Absoluta de Seguranca
-    if pr_vulns > 0:
+    # 1. Regra Absoluta de Violacoes
+    if pr_violations > 0:
         passed = False
-        motivo = f"Reprovado pela Regra Absoluta: {pr_vulns} vuln(s) crítica(s)."
+        motivo = f"Reprovado pela Regra Absoluta: {pr_violations} violação(ões)."
     # 2. Regra Diferencial de Cobertura
     elif pr_coverage < base_cov:
         passed = False
-        motivo = f"Reprovado na Regra Diferencial: A cobertura caiu."
-    else:
-        # 3. Regra de Qualidade Ponderada
-        seguranca_score = 100.0
-        nota_final = (seguranca_score * 0.4) + (pr_complexity_score * 0.3) + (pr_best_practices * 0.2) + (pr_errors_score * 0.1)
-        if nota_final >= 80.0:
-            passed = True
-            motivo = f"Aprovado. Nota final ponderada: {nota_final:.2f}/100."
-        else:
-            passed = False
-            motivo = f"Reprovado. Nota ({nota_final:.2f}/100) abaixo da média 80."
+        motivo = f"Reprovado: A cobertura caiu."
+    elif pr_duplication > 5.0:
+        passed = False
+        motivo = f"Reprovado: Duplicação acima de 5%."
 
     status_icon = "✅ **Passed**" if passed else "❌ **Failed**"
     
+    critical_warning = ""
+    if pr_violations > 0:
+        critical_warning = f"\n> [!CAUTION]\n> 🚨 **FALHA CRÍTICA:** Foram detectadas {pr_violations} violação(ões) severa(s) no seu código. Corrija imediatamente antes de solicitar revisão humana.\n"
+
     tabela_markdown = f"""### 🛡️ Quality Gate Report
 **Status:** {status_icon}
+{critical_warning}
+#### Quality Metrics
 
 | Metric | Baseline | Current | Δ |
 |---|---|---|---|
 | **Test Coverage** | {base_cov:.2f}% | {pr_coverage:.2f}% | {formata_sinal(delta_cov)}% |
-| **Critical Vulns** | {(baseline["critical_vulns"] if baseline else 0)} | {pr_vulns} | {formata_sinal(delta_vulns, True)} |
-| **Complexity Score**| {(baseline["complexity_score"] if baseline else 0.0):.2f} | {pr_complexity_score:.2f} | {formata_sinal(delta_comp)} |
+| **Duplication** | {base_dup:.2f}% | {pr_duplication:.2f}% | {formata_sinal(delta_dup)}% |
+| **Violations** | 0 | {pr_violations} | {formata_sinal(pr_violations, True)} |
 
-**Motivo:** {motivo}
+#### Code Regressions
+*O arquivo `{pr_regression_file}` sofreu uma regressão de tamanho. O código originalmente continha **{pr_regression_lines_before}** linhas, e após as suas adições inflou para **{pr_regression_lines_after}** linhas.*
+
+**Motivo do Gate:** {motivo}
 """
 
     return {
