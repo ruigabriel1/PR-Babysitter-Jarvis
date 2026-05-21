@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Request, BackgroundTasks
 from fastapi.responses import HTMLResponse
 from tools.quality_gate import evaluate_quality_gate
-from tools.github_api import set_commit_status, submit_pr_review
+from tools.github_api import set_commit_status, submit_pr_review, get_pr_diff
 from tools.ollama_client import prompt_jarvis
 import uvicorn
 
@@ -55,7 +55,7 @@ async def process_pr(payload: dict):
         return
         
     # --- FLUXO DE VALIDAÇÃO DE PR ---
-    if action not in ["opened", "synchronize"]:
+    if action not in ["opened", "synchronize", "reopened"]:
         return
         
     repo_full_name = payload.get("repository", {}).get("full_name")
@@ -67,16 +67,42 @@ async def process_pr(payload: dict):
     # 1. Altera Status para Pendente
     set_commit_status(repo_full_name, head_sha, "pending", "Jarvis está validando as métricas...")
     
-    # 2. Mock de Métricas do Código (Demonstração de Qualidade de Código)
-    pr_coverage = 82.0 
-    pr_duplication = 3.5
-    pr_violations = 1  # Falha crítica proposital
+    # 2. Ler o Diff Real
+    raw_diff = get_pr_diff(repo_full_name, pull_number)
     
-    pr_regression_file = "bad_code.py"
-    pr_regression_lines_before = 0
-    pr_regression_lines_after = 12
+    # 3. Parsear o Diff para calcular Métricas Reais
+    lines_added = 0
+    lines_removed = 0
+    critical_violations = 0
+    affected_files = set()
+    current_file = "unknown"
     
-    # 3. Calcula o Quality Gate
+    vulnerable_keywords = ["eval(", "exec(", "password", "os.system(", "subprocess.Popen(", "secret", "token"]
+    
+    for line in raw_diff.split("\n"):
+        if line.startswith("+++ b/"):
+            current_file = line[6:]
+            affected_files.add(current_file)
+        elif line.startswith("+") and not line.startswith("+++"):
+            lines_added += 1
+            # Procura por vulnerabilidades na linha adicionada
+            lower_line = line.lower()
+            for kw in vulnerable_keywords:
+                if kw in lower_line:
+                    critical_violations += 1
+        elif line.startswith("-") and not line.startswith("---"):
+            lines_removed += 1
+            
+    # Configurar Métricas Baseadas na Realidade
+    pr_coverage = 82.0  # Ainda mockado pois precisaria de um runner de testes real (pytest)
+    pr_duplication = 2.0 + (lines_added * 0.05) # Sobe a duplicação baseado no tamanho do diff
+    pr_violations = critical_violations
+    
+    pr_regression_file = list(affected_files)[0] if affected_files else "Nenhum arquivo"
+    pr_regression_lines_before = lines_removed
+    pr_regression_lines_after = lines_added
+    
+    # 4. Calcula o Quality Gate
     gate_result = evaluate_quality_gate(pr_coverage, pr_duplication, pr_violations, pr_regression_file, pr_regression_lines_before, pr_regression_lines_after)
     
     if gate_result["pass"]:
@@ -86,10 +112,15 @@ async def process_pr(payload: dict):
         set_commit_status(repo_full_name, head_sha, "failure", gate_result["reason"])
         submit_pr_review(repo_full_name, pull_number, "COMMENT", gate_result["report"])
         
-        # 4. Aciona a Skill de Babysit via LLM Local
+        # 5. Aciona a Skill de Babysit via LLM Local usando o DIFF REAL!
+        # Limitamos o tamanho do diff para evitar estourar o contexto do Llama
+        safe_diff = raw_diff[:3000] if len(raw_diff) > 3000 else raw_diff
+        
+        linter_msg = f"Foram encontradas {critical_violations} violações críticas de segurança ou más práticas (Ex: eval, senhas hardcoded, etc)." if critical_violations > 0 else "Código reprovado por inflar a base de código sem testes adequados ou por duplicação."
+        
         jarvis_reply = prompt_jarvis(
-            diff_chunk="+ def unused_function():\n+    pass\n", 
-            linter_error="W0612: Unused variable ou redução de cobertura."
+            diff_chunk=safe_diff, 
+            linter_error=linter_msg
         )
         submit_pr_review(repo_full_name, pull_number, "COMMENT", f"## Codex Review\n\n{jarvis_reply}")
 

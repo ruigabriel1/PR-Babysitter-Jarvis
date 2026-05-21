@@ -13,12 +13,6 @@ services:
       - .env
     depends_on:
       - ollama
-    dns:
-      - 8.8.8.8
-      - 8.8.4.4
-    networks:
-      vpcbr:
-        ipv4_address: 172.20.0.6
     command: uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload
 
   ollama:
@@ -28,9 +22,6 @@ services:
       - "11434:11434"
     volumes:
       - ollama_data:/root/.ollama
-    networks:
-      vpcbr:
-        ipv4_address: 172.20.0.5
     entrypoint: >
       /bin/sh -c "
       /bin/ollama serve &
@@ -38,12 +29,6 @@ services:
       /bin/ollama pull llama3.2 &&
       tail -f /dev/null
       "
-
-networks:
-  vpcbr:
-    ipam:
-      config:
-        - subnet: 172.20.0.0/16
 
 volumes:
   ollama_data:
