@@ -8,7 +8,7 @@ def evaluate_quality_gate(pr_coverage: float, pr_vulns: int, pr_complexity_score
     baseline = get_current_baseline()
     
     # Fallback se a db estiver vazia
-    base_cov = baseline.test_coverage if baseline else 0.0
+    base_cov = baseline["test_coverage"] if baseline else 0.0
     
     # 1. Regra Absoluta de Seguranca
     if pr_vulns > 0:

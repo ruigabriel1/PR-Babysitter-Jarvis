@@ -31,8 +31,19 @@ def get_current_baseline():
     """Retorna as métricas atuais da baseline."""
     session = SessionLocal()
     baseline = session.query(BaselineMetrics).order_by(BaselineMetrics.updated_at.desc()).first()
+    
+    if baseline:
+        # Prevenimos erro de detached instance extraindo os dados antes do session.close()
+        data = {
+            "test_coverage": baseline.test_coverage,
+            "critical_vulns": baseline.critical_vulns,
+            "complexity_score": baseline.complexity_score
+        }
+    else:
+        data = None
+        
     session.close()
-    return baseline
+    return data
 
 def update_baseline(coverage: float, vulns: int, complexity: float):
     """Atualiza a foto da baseline oficial (ocorre apenas após merges na main)."""
