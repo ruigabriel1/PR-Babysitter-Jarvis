@@ -52,13 +52,26 @@ Siga estes passos exatos para testar o Agente rodando na sua máquina:
 
 1. O Docker já deve estar rodando localmente (veja o passo acima).
 2. Acesse o meu repositório oficial no GitHub: [https://github.com/ruigabriel1/PR-Babysitter-Jarvis](https://github.com/ruigabriel1/PR-Babysitter-Jarvis)
-3. Faça um **Fork** do repositório para a sua conta do GitHub.
-4. No seu Fork recém-criado, crie um novo arquivo chamado `teste_seguranca.py`.
-5. Copie e cole todo o conteúdo do arquivo `evaluator_test_template.py` (que está na raiz do projeto) para dentro deste novo arquivo. *(Ele contém uso malicioso de `eval`, `os.system`, senhas expostas e código inútil para explodir a duplicação).*
-6. Faça o commit no seu Fork.
-7. Abra um **Pull Request** do seu Fork enviando o código para a branch `master` do MEU repositório original.
-8. **A Magia:** Vá para a aba do Pull Request no meu repositório. Como o GitHub disparou o Webhook para o Smee, a API *rodando na sua máquina física* receberá o payload, processará o Diff com o Llama 3.2 local, e usará o Token embutido no `.env` para postar a resposta de volta no GitHub!
-9. Em poucos segundos, você verá:
+3. Para conseguir enviar código para o meu repositório sem precisar fazer um Fork, você utilizará o meu próprio Token (que já está no arquivo `.env` que você descompactou).
+4. No seu terminal, clone o repositório utilizando o Token embutido na URL de autenticação:
+   ```bash
+   git clone https://<COLE_O_TOKEN_DO_ENV_AQUI>@github.com/ruigabriel1/PR-Babysitter-Jarvis.git
+   ```
+5. Entre na pasta clonada e crie uma nova branch:
+   ```bash
+   cd PR-Babysitter-Jarvis
+   git checkout -b teste-banca-avaliadora
+   ```
+6. Copie e cole todo o conteúdo do arquivo `evaluator_test_template.py` para dentro de um arquivo novo qualquer. *(Esse template contém uso malicioso de `eval`, `os.system`, senhas expostas e código inútil para explodir a duplicação).*
+7. Efetue o *Commit* e o *Push* diretamente para o meu repositório:
+   ```bash
+   git add .
+   git commit -m "Teste de invasão"
+   git push origin teste-banca-avaliadora
+   ```
+8. Acesse a página do repositório no GitHub e abra um **Pull Request**.
+9. **A Magia:** Vá para a aba do Pull Request no meu repositório. Como o GitHub disparou o Webhook para o Smee, a API *rodando na sua máquina física* receberá o payload, processará o Diff com o Llama 3.2 local, e usará o Token embutido no `.env` para postar a resposta de volta no GitHub!
+10. Em poucos segundos, você verá:
    - As **Tabelas de Quality Gate** (Coverage penalizada, Duplication e Violations).
    - O veredito de falha (*Failed*).
    - O **Dossiê do Red Team** gerado pela IA contendo a Nota de Segurança (Security Grade), o Vetor de Ataque e um *Exploit Payload* simulando o ataque real.
